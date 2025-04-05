@@ -80,11 +80,12 @@ def setup_page_routes(app: FastAPI) -> None:
             if not auth_token or not verify_auth_token(auth_token):
                 logger.warning("Unauthorized access attempt to keys page")
                 return RedirectResponse(url="/", status_code=302)
-
             key_manager = await get_key_manager_instance()
             keys_status = await key_manager.get_keys_by_status()
             total = len(keys_status["valid_keys"]) + len(keys_status["invalid_keys"])
             logger.info(f"Keys status retrieved successfully. Total keys: {total}")
+
+            from app.config.config import settings
             return templates.TemplateResponse(
                 "keys_status.html",
                 {
@@ -92,7 +93,11 @@ def setup_page_routes(app: FastAPI) -> None:
                     "valid_keys": keys_status["valid_keys"],
                     "invalid_keys": keys_status["invalid_keys"],
                     "total": total,
-                },
+                    "show_thinking_process": settings.SHOW_THINKING_PROCESS,
+                    "tools_code_execution_enabled": settings.TOOLS_CODE_EXECUTION_ENABLED,
+                    "show_search_link": settings.SHOW_SEARCH_LINK,
+                    "stream_optimizer_enabled": settings.STREAM_OPTIMIZER_ENABLED,
+                }
             )
         except Exception as e:
             logger.error(f"Error retrieving keys status: {str(e)}")

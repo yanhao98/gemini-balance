@@ -25,8 +25,20 @@ function copyToClipboard(text) {
     }
 }
 
+function switchTab(type) {
+    // 更新标签按钮状态
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelector(`.tab-btn[onclick="switchTab('${type}')"]`).classList.add('active');
+
+    // 显示对应的密钥表格
+    document.getElementById('validKeys').style.display = type === 'valid' ? '' : 'none';
+    document.getElementById('invalidKeys').style.display = type === 'invalid' ? '' : 'none';
+}
+
 function copyKeys(type) {
-    const keys = Array.from(document.querySelectorAll(`#${type}Keys .key-text`)).map(span => span.textContent.trim());
+    const keys = Array.from(document.querySelectorAll(`#${type}Keys .key-text`)).map(td => td.textContent.trim());
     const jsonKeys = JSON.stringify(keys);
     
     copyToClipboard(jsonKeys)
@@ -53,12 +65,12 @@ function copyKey(key) {
 function showCopyStatus(message, type = 'success') {
     const statusElement = document.getElementById('copyStatus');
     statusElement.textContent = message;
-    statusElement.className = type; // 设置样式类
+    statusElement.className = type;
     statusElement.style.opacity = 1;
     setTimeout(() => {
         statusElement.style.opacity = 0;
         setTimeout(() => {
-            statusElement.className = ''; // 清除样式类
+            statusElement.className = '';
         }, 300);
     }, 2000);
 }
@@ -78,10 +90,10 @@ async function verifyKey(key, button) {
         // 根据验证结果更新UI
         if (data.status === 'valid') {
             showCopyStatus('密钥验证成功', 'success');
-            button.style.backgroundColor = '#27ae60';
+            button.style.backgroundColor = 'rgba(56, 161, 105, 0.2)';
         } else {
             showCopyStatus('密钥验证失败', 'error');
-            button.style.backgroundColor = '#e74c3c';
+            button.style.backgroundColor = 'rgba(229, 62, 62, 0.2)';
         }
 
         // 3秒后恢复按钮原始状态
@@ -100,7 +112,7 @@ async function verifyKey(key, button) {
 }
 
 function scrollToTop() {
-    const container = document.querySelector('.container');
+    const container = document.querySelector('.keys-panel');
     container.scrollTo({
         top: 0,
         behavior: 'smooth'
@@ -108,7 +120,7 @@ function scrollToTop() {
 }
 
 function scrollToBottom() {
-    const container = document.querySelector('.container');
+    const container = document.querySelector('.keys-panel');
     container.scrollTo({
         top: container.scrollHeight,
         behavior: 'smooth'
@@ -116,7 +128,7 @@ function scrollToBottom() {
 }
 
 function updateScrollButtons() {
-    const container = document.querySelector('.container');
+    const container = document.querySelector('.keys-panel');
     const scrollButtons = document.querySelector('.scroll-buttons');
     if (container.scrollHeight > container.clientHeight) {
         scrollButtons.style.display = 'flex';
@@ -134,42 +146,20 @@ function refreshPage(button) {
     }, 300);
 }
 
-function toggleSection(header, sectionId) {
-    const toggleIcon = header.querySelector('.toggle-icon');
-    const content = header.nextElementSibling;
-    
-    toggleIcon.classList.toggle('collapsed');
-    content.classList.toggle('collapsed');
-}
-
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
-    // 检查滚动按钮
-    updateScrollButtons();
+    // 默认显示有效密钥
+    switchTab('valid');
 
-    // 监听展开/折叠事件
-    document.querySelectorAll('.key-list h2').forEach(header => {
-        header.addEventListener('click', () => {
-            setTimeout(updateScrollButtons, 300);
-        });
-    });
+    // 检查滚动按钮
+    // updateScrollButtons();
+
+    // 监听窗口大小变化
+    // window.addEventListener('resize', updateScrollButtons);
 
     // 更新版权年份
-    const copyrightYear = document.querySelector('.copyright script');
+    const copyrightYear = document.querySelector('.app-footer script');
     if (copyrightYear) {
         copyrightYear.textContent = new Date().getFullYear();
     }
 });
-
-// Service Worker registration
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/static/service-worker.js')
-            .then(registration => {
-                console.log('ServiceWorker注册成功:', registration.scope);
-            })
-            .catch(error => {
-                console.log('ServiceWorker注册失败:', error);
-            });
-    });
-}
